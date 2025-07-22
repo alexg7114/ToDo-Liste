@@ -1,3 +1,16 @@
-_pycache_/
-db.sqlite3
-.env
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# SQLite DB
+.db
+
+# IDE settings
+.vscode/
+.idea/
+
+# System
+.DS_Store
+
+
