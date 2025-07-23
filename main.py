@@ -24,6 +24,8 @@ from models import ToDo, ToDoCreate, ToDoRead
 from database import engine
 from database import get_session
 from models import User, UserCreate, UserRead
+from models import ToDoUpdate
+from fastapi import status
 
 security = HTTPBearer()
 
@@ -178,5 +180,50 @@ def read_users_me(current_user: dict = Depends(get_current_user)):
 @app.get("/ping")
 def ping():
     return {"message": "pong"}
+
+
+@app.put("/todos/{todo_id}", response_model=ToDo)
+def update_todo(
+  todo_id: int,
+  todo_update: ToDoUpdate,
+  session: Session = Depends(get_session),
+  current_user: User = Depends(get_current_user),
+):
+  db_todo = session.get(ToDo, todo_id)
+  if not db_todo:
+    raise HTTPException(status_code=404, detail="ToDo not found")
+  
+  if db_todo.user != current_user.username:
+    raise HTTPException(status_code=403, detail="Not authorized to update this ToDo")
+  
+  if todo_update.title is not None:
+    db_todo.title = todo_update.title
+  if todo_update.description is not None:
+    db_todo.description = todo_update.description
+  if todo_update.done is not None:
+    db_todo.done = todo_update.done
+    
+  session.add(db_todo)
+  session.commit()
+  session.refresh(db_todo)
+  return db_todo
+
+
+@app.delete("/todos/{todo_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_todo(
+  todo_id: int,
+  session: Session = Depends(get_session),
+  current_user: User = Depends(get_current_user),
+):
+  db_todo = session.get(ToDo, todo_id)
+  if not db_todo:
+    raise HTTPException(status_code=404, detail="ToDo not found")
+  
+  if db_todo.user != current_user.username:
+    raise HTTPException(status_code=403, detail="Not authorized to delete this ToDo")
+  
+  session.delete(db_todo)
+  session.commit()
+  return
 
 

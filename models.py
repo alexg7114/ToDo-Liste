@@ -45,3 +45,9 @@ class ToDoRead(BaseModel):
   user: str
   
   
+class ToDoUpdate(BaseModel):
+  title: Optional[str] = None
+  description: Optional[str] = None
+  done: Optional[bool] = None
+  
+  
