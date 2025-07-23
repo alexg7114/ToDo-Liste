@@ -10,15 +10,23 @@ from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 import logging
 
+from database import create_db_and_tables
+
+from sqlmodel import Session, select
+from models import ToDo
+from database import engine
+
+
+
 logging.basicConfig(level=logging.DEBUG)
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 
-
-
-
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+
+  
 
 users_db = []
 
@@ -123,6 +131,30 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
 
 print("Current users_db:", users_db)
 
+
+@app.on_event("startup")
+def on_startup():
+  create_db_and_tables()
+
+
+
+
+
+@app.post("/todos")
+def create_todo(todo: ToDo, user=Depends(get_current_user)):
+  todo.user = user["username"]
+  with Session(engine) as session:
+    session.add(todo)
+    session.commit()
+    session.refresh(todo)
+    return todo
+  
+@app.get("/todos")
+def read_todos(user=Depends(get_current_user)):
+  with Session(engine) as session:
+    statement = select(ToDo).where(ToDo.user == user["username"])
+    results = session.exec(statement).all()
+    return results
 
   
   
