@@ -10,21 +10,27 @@ from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 import logging
 
+from fastapi.openapi.models import OAuthFlows as OAuthFlowsModel
+from fastapi.openapi.models import OAuthFlowPassword
+from fastapi.openapi.models import SecuritySchemeType
+from fastapi.openapi.utils import get_openapi
+from fastapi.security import OAuth2
+
 from database import create_db_and_tables
 
 from sqlmodel import Session, select
 from models import ToDo
 from database import engine
 
-
+app = FastAPI()
 
 logging.basicConfig(level=logging.DEBUG)
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
   
 
@@ -42,7 +48,7 @@ def get_password_hash(password):
   return pwd_context.hash(password)
 
 
-app = FastAPI()
+
 
 @app.get("/")
 def read_root():
@@ -156,5 +162,9 @@ def read_todos(user=Depends(get_current_user)):
     results = session.exec(statement).all()
     return results
 
+  
+  @app.get("/me")
+  def read_users_me(current_user: dict = Depends(get_current_user)):
+    return {"username": current_user["username"]}
   
   
