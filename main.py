@@ -7,7 +7,7 @@ from jose import JWTError, jwt
 from datetime import datetime, timedelta, timezone
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi import Depends
-#from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+
 import logging
 
 from fastapi.openapi.models import OAuthFlows as OAuthFlowsModel
@@ -28,7 +28,6 @@ from models import ToDoUpdate
 from fastapi import status
 from fastapi.security import OAuth2PasswordBearer
 
-#security = HTTPBearer()
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -53,7 +52,6 @@ class UserOut(BaseModel):
   
 def get_password_hash(password):
   return pwd_context.hash(password)
-
 
 
 
@@ -83,13 +81,13 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 
 def create_access_token(data: dict, expires_delta: timedelta = None):
-  print("Generating token for:", data)
+  
   to_encode = data.copy()
   expire = datetime.now(tz=timezone.utc) + (expires_delta or timedelta(minutes=15))
-  print("Expire at:", expire)
+  
   to_encode.update({"exp": expire})
   token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-  print("Generated token:", token)
+  
   return token
 
 
@@ -105,10 +103,8 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), session: Session = D
   
     
   token = create_access_token(data={"sub": user.username})
-  print("Token created:", token)
+  
   return {"access_token": token, "token_type": "bearer"}
-
-
 
 
 
@@ -129,14 +125,12 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
     raise HTTPException(status_code=401, detail="User not found")
   return user
   
-  
  
 
 
 @app.on_event("startup")
 def on_startup():
   create_db_and_tables()
-
 
 
   
@@ -155,8 +149,7 @@ def create_todo(
   session: Session = Depends(get_session),
   current_user: dict = Depends(get_current_user),
 ):
-  print("current_user:", current_user)
-  print("todo input:", todo)
+  
   try:
     
     new_todo = ToDo(
@@ -170,7 +163,7 @@ def create_todo(
     session.refresh(new_todo)
     return new_todo
   except Exception as e:
-    print("Fehler with create todo:", e)
+    
     raise HTTPException(status_code=500, detail=str(e))
   
 
